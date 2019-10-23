@@ -1,16 +1,16 @@
 <template>
     <div class="cmt-container">
         <h3>发表评论</h3>
-        <textarea placeholder="请输入要评论的内容(最多吐槽120字)"></textarea>
-        <mt-button type="primary" size="large">发表评论</mt-button>
+        <textarea placeholder="请输入要评论的内容(最多吐槽120字)" v-model="msg"></textarea>
+        <mt-button type="primary" size="large" @click="postComment">发表评论</mt-button>
 
         <div class="cmt-list">
-            <div class="cmt-item" v-for="(item,i) in comments" :key="item.add_time">
+            <div class="cmt-item" v-for="(item,i) in comments" :key="i">
                 <div class="cmt-title">
                     第{{ i+1 }}楼&nbsp;&nbsp;用户:{{ item.user_name }}&nbsp;&nbsp;发表时间:{{ item.add_time | deteFormat }}
                 </div>
                 <div class="cmt-body">
-                    {{ item.content == 'undefined' ? '这个用户很懒，啥都没说' : item.content }}
+                    {{ item.content == 'undefined' || '' ? '这个用户很懒，啥都没说' : item.content }}
                 </div>
             </div>
         </div>
@@ -26,7 +26,8 @@ export default {
     data() {
         return {
             pageindex:1,   //默认展示第一页数据
-            comments : []
+            comments : [],
+            msg:""
         }
     },
     created() {
@@ -47,6 +48,22 @@ export default {
         getMore() {
             this.pageindex ++ ;
             this.getComment();
+        },
+
+        postComment() {
+            if(this.msg.trim().length === 0) {
+                return Toast('评论内容不能为空!')
+            }
+
+            this.$http.post('api/postcomment/' + this.$route.params.id, {content: this.msg.trim()}).then(function(result) {
+                var cmt = {
+                    user_name : "匿名用户",
+                    add_time :new Date(),
+                    content:this.msg.trim()
+                }
+                this.comments.unshift(cmt)
+                this.msg = ""
+            })
         }
     },
     props:["id"]
